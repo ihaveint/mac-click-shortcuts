@@ -1,6 +1,6 @@
 # mac-click-shortcuts
 
-Keyboard shortcuts for mouse clicks and drag on macOS. Runs silently in the background, auto-starts on login.
+Keyboard shortcuts for mouse clicks, drag, and clipboard stack on macOS. Runs silently in the background, auto-starts on login.
 
 | Shortcut | Action |
 |---|---|
@@ -8,16 +8,20 @@ Keyboard shortcuts for mouse clicks and drag on macOS. Runs silently in the back
 | `cmd+shift+e` | Right click at cursor |
 | `cmd+shift+s` | Start drag (hold mouseDown) |
 | `cmd+shift+a` | End drag (release mouseUp) |
+| `cmd+shift+c` | Push current clipboard to stack |
+| `cmd+option+v` | Pop stack → paste |
 
 ## How it works
 
 - **skhd** — global hotkey daemon, runs as a launchd agent
-- **cleanclick** — compiled Swift binary that posts `CGEvent` mouse clicks with modifier flags explicitly cleared (prevents `cmd+shift` bleeding into the click)
+- **cleanclick** — compiled Swift binary that posts `CGEvent` mouse clicks with modifier flags explicitly cleared (prevents `cmd+shift` bleeding into the click). Also handles `paste` mode (synthetic cmd+v) to avoid Accessibility chain break through bash.
 - **dragdaemon** — persistent Swift daemon that:
   - Intercepts all `mouseMoved` events via `CGEventTap`
   - Converts them to `leftMouseDragged` while drag is active
   - Triggered by skhd via `/tmp` flag files (`/tmp/cleanclick_dragdown`, `/tmp/cleanclick_dragup`)
   - Runs as a LaunchAgent, auto-starts on login, restarts on crash
+- **clipboard stack** — LIFO stack stored in `~/.clipboard_stack` (base64-encoded entries, one per line)
+- **clipnotify** — compiled Swift binary that shows a borderless animated overlay in the bottom-left corner on each push (blue) or pop (green), displaying item count
 
 ## Install
 
@@ -46,7 +50,22 @@ launchctl unload ~/Library/LaunchAgents/com.cleanclick.dragdaemon.plist
 launchctl load ~/Library/LaunchAgents/com.cleanclick.dragdaemon.plist
 ```
 
-> **Note:** if you recompile either binary, its hash changes and Accessibility permission resets — re-grant and restart.
+> **Note:** if you recompile any binary, its hash changes and Accessibility permission resets — re-grant and restart.
+
+## Clipboard stack
+
+Push/pop workflow:
+1. Select text → `cmd+c` (normal copy)
+2. `cmd+shift+c` → pushes current clipboard onto stack (blue overlay shows count)
+3. Repeat to stack more items
+4. `cmd+option+v` → pops top item, pastes it (green overlay shows remaining count)
+
+Stack is LIFO — last pushed is first popped.
+
+```bash
+cat ~/.clipboard_stack    # inspect stack (base64 encoded)
+> ~/.clipboard_stack      # clear stack
+```
 
 ## Safari conflict
 
@@ -75,4 +94,8 @@ pgrep dragdaemon            # verify running
 cat /tmp/dragdaemon.err.log # check errors
 launchctl unload ~/Library/LaunchAgents/com.cleanclick.dragdaemon.plist
 launchctl load ~/Library/LaunchAgents/com.cleanclick.dragdaemon.plist
+
+# clipboard stack
+cat ~/.clipboard_stack      # inspect stack
+> ~/.clipboard_stack        # clear stack
 ```
