@@ -10,6 +10,7 @@ Keyboard shortcuts for mouse clicks, drag, and clipboard stack on macOS. Runs si
 | `cmd+shift+a` | End drag (release mouseUp) |
 | `cmd+shift+c` | Push current clipboard to stack |
 | `cmd+option+v` | Pop stack → paste |
+| `cmd+shift+u` | Drop top stack item (no paste) |
 
 ## How it works
 
@@ -21,7 +22,7 @@ Keyboard shortcuts for mouse clicks, drag, and clipboard stack on macOS. Runs si
   - Triggered by skhd via `/tmp` flag files (`/tmp/cleanclick_dragdown`, `/tmp/cleanclick_dragup`)
   - Runs as a LaunchAgent, auto-starts on login, restarts on crash
 - **clipboard stack** — LIFO stack stored in `~/.clipboard_stack` (base64-encoded entries, one per line)
-- **clipnotify** — compiled Swift binary that shows a borderless animated overlay in the bottom-left corner on each push (blue) or pop (green), displaying item count
+- **clipnotify** — compiled Swift binary that shows a borderless animated overlay in the bottom-left corner on each push (blue), pop (green), or drop (red), displaying item count
 
 ## Install
 
@@ -61,6 +62,8 @@ Push/pop workflow:
 4. `cmd+option+v` → pops top item, pastes it (green overlay shows remaining count)
 
 Stack is LIFO — last pushed is first popped.
+
+`cmd+shift+u` drops the top item silently (red overlay) without touching the clipboard or pasting — useful for discarding a bad push.
 
 ```bash
 cat ~/.clipboard_stack    # inspect stack (base64 encoded)
