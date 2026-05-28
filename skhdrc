@@ -1,2 +1,3 @@
 cmd + shift - d : /opt/homebrew/bin/cleanclick
 cmd + shift - e : /opt/homebrew/bin/cleanclick right
+cmd + shift - f : /opt/homebrew/bin/cleanclick drag
