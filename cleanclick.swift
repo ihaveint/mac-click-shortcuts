@@ -16,14 +16,23 @@ func postEvent(_ type: CGEventType, _ button: CGMouseButton) {
 
 if mode == "drag" {
     let lockFile = "/tmp/cleanclick_drag.lock"
-    if FileManager.default.fileExists(atPath: lockFile) {
-        // second press — release
-        postEvent(.leftMouseUp, .left)
-        try? FileManager.default.removeItem(atPath: lockFile)
+    let fm = FileManager.default
+
+    if fm.fileExists(atPath: lockFile) {
+        // ignore key repeat: if lock was created < 400ms ago, do nothing
+        if let attrs = try? fm.attributesOfItem(atPath: lockFile),
+           let created = attrs[.creationDate] as? Date,
+           Date().timeIntervalSince(created) < 0.4 {
+            // key repeat — ignore
+        } else {
+            // genuine second press — release
+            postEvent(.leftMouseUp, .left)
+            try? fm.removeItem(atPath: lockFile)
+        }
     } else {
         // first press — hold down
         postEvent(.leftMouseDown, .left)
-        FileManager.default.createFile(atPath: lockFile, contents: nil, attributes: nil)
+        fm.createFile(atPath: lockFile, contents: nil, attributes: nil)
     }
 } else {
     let rightClick = mode == "right"
