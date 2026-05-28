@@ -13,6 +13,9 @@ switch type {
 case "pop":
     label = extra.isEmpty ? "📋 Popped" : "📋 Popped  ·  \(extra) left"
     color = NSColor(red: 0.15, green: 0.4, blue: 0.15, alpha: 0.92)
+case "drop":
+    label = extra.isEmpty ? "🗑 Dropped" : "🗑 Dropped  ·  \(extra) left"
+    color = NSColor(red: 0.4, green: 0.15, blue: 0.1, alpha: 0.92)
 default: // push
     label = extra.isEmpty ? "📋 Pushed" : "📋 Pushed  ·  \(extra) in stack"
     color = NSColor(red: 0.1, green: 0.2, blue: 0.45, alpha: 0.92)
