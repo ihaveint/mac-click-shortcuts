@@ -14,33 +14,17 @@ func postEvent(_ type: CGEventType, _ button: CGMouseButton) {
     event.post(tap: .cghidEventTap)
 }
 
-if mode == "drag" {
-    let lockFile = "/tmp/cleanclick_drag.lock"
-    let fm = FileManager.default
-
-    if fm.fileExists(atPath: lockFile) {
-        // ignore key repeat: if lock was created < 400ms ago, do nothing
-        if let attrs = try? fm.attributesOfItem(atPath: lockFile),
-           let created = attrs[.creationDate] as? Date,
-           Date().timeIntervalSince(created) < 0.4 {
-            // key repeat — ignore
-        } else {
-            // genuine second press — release
-            postEvent(.leftMouseUp, .left)
-            try? fm.removeItem(atPath: lockFile)
-        }
-    } else {
-        // first press — hold down
-        postEvent(.leftMouseDown, .left)
-        fm.createFile(atPath: lockFile, contents: nil, attributes: nil)
-    }
-} else {
-    let rightClick = mode == "right"
-    let downType: CGEventType = rightClick ? .rightMouseDown : .leftMouseDown
-    let upType: CGEventType   = rightClick ? .rightMouseUp   : .leftMouseUp
-    let button: CGMouseButton = rightClick ? .right          : .left
-
-    postEvent(downType, button)
+switch mode {
+case "right":
+    postEvent(.rightMouseDown, .right)
     Thread.sleep(forTimeInterval: 0.01)
-    postEvent(upType, button)
+    postEvent(.rightMouseUp, .right)
+case "dragdown":
+    postEvent(.leftMouseDown, .left)
+case "dragup":
+    postEvent(.leftMouseUp, .left)
+default: // "left"
+    postEvent(.leftMouseDown, .left)
+    Thread.sleep(forTimeInterval: 0.01)
+    postEvent(.leftMouseUp, .left)
 }
