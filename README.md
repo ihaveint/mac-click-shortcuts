@@ -1,21 +1,28 @@
 # mac-click-shortcuts
 
-Keyboard shortcuts for mouse clicks on macOS. Runs silently in the background, auto-starts on login.
+Keyboard shortcuts for mouse clicks and drag on macOS. Runs silently in the background, auto-starts on login.
 
 | Shortcut | Action |
 |---|---|
 | `cmd+shift+d` | Left click at cursor |
 | `cmd+shift+e` | Right click at cursor |
+| `cmd+shift+s` | Start drag (hold mouseDown) |
+| `cmd+shift+a` | End drag (release mouseUp) |
 
 ## How it works
 
 - **skhd** — global hotkey daemon, runs as a launchd agent
-- **cleanclick** — small compiled Swift binary that posts a `CGEvent` mouse click with modifier flags explicitly cleared (prevents `cmd+shift` bleeding into the click)
+- **cleanclick** — compiled Swift binary that posts `CGEvent` mouse clicks with modifier flags explicitly cleared (prevents `cmd+shift` bleeding into the click)
+- **dragdaemon** — persistent Swift daemon that:
+  - Intercepts all `mouseMoved` events via `CGEventTap`
+  - Converts them to `leftMouseDragged` while drag is active
+  - Triggered by skhd via `/tmp` flag files (`/tmp/cleanclick_dragdown`, `/tmp/cleanclick_dragup`)
+  - Runs as a LaunchAgent, auto-starts on login, restarts on crash
 
 ## Install
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/mac-click-shortcuts
+git clone https://github.com/ihaveint/mac-click-shortcuts
 cd mac-click-shortcuts
 chmod +x install.sh
 ./install.sh
@@ -25,12 +32,21 @@ Then grant Accessibility permission (script will tell you exactly where).
 
 ## Accessibility permission
 
-macOS requires Accessibility access for both global hotkey interception and synthetic mouse events. One-time setup:
+macOS requires Accessibility access for global hotkey interception, synthetic mouse events, and event tap. One-time setup for each binary:
 
 1. System Settings → Privacy & Security → Accessibility
-2. Add `/opt/homebrew/Cellar/skhd/<version>/bin/skhd` (use the real path, not the symlink)
-3. Toggle ON
-4. Run `skhd --stop-service && skhd --start-service`
+2. Add each of these (use `+` → Cmd+Shift+G to paste path):
+   - `/opt/homebrew/Cellar/skhd/<version>/bin/skhd`
+   - `/opt/homebrew/bin/dragdaemon`
+3. Toggle both ON
+4. Run:
+```bash
+skhd --stop-service && skhd --start-service
+launchctl unload ~/Library/LaunchAgents/com.cleanclick.dragdaemon.plist
+launchctl load ~/Library/LaunchAgents/com.cleanclick.dragdaemon.plist
+```
+
+> **Note:** if you recompile either binary, its hash changes and Accessibility permission resets — re-grant and restart.
 
 ## Safari conflict
 
@@ -48,8 +64,15 @@ Edit `~/.skhdrc` and run `skhd --reload`.
 ## Commands
 
 ```bash
-skhd --start-service   # start + register as login item
-skhd --stop-service    # stop
-skhd --reload          # reload config without restart
-pgrep skhd             # verify running
+# skhd
+skhd --start-service        # start + register as login item
+skhd --stop-service         # stop
+skhd --reload               # reload config without restart
+pgrep skhd                  # verify running
+
+# dragdaemon
+pgrep dragdaemon            # verify running
+cat /tmp/dragdaemon.err.log # check errors
+launchctl unload ~/Library/LaunchAgents/com.cleanclick.dragdaemon.plist
+launchctl load ~/Library/LaunchAgents/com.cleanclick.dragdaemon.plist
 ```
