@@ -1,4 +1,4 @@
 cmd + shift - d : /opt/homebrew/bin/cleanclick
 cmd + shift - e : /opt/homebrew/bin/cleanclick right
-cmd + shift - s : /opt/homebrew/bin/cleanclick dragdown
-cmd + shift - a : /opt/homebrew/bin/cleanclick dragup
+cmd + shift - s : touch /tmp/cleanclick_dragdown
+cmd + shift - a : touch /tmp/cleanclick_dragup
