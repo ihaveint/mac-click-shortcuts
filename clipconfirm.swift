@@ -53,7 +53,8 @@ box.addSubview(questionLabel)
 box.addSubview(hintLabel)
 window.contentView?.addSubview(box)
 window.alphaValue = 0
-window.orderFront(nil)
+window.makeKeyAndOrderFront(nil)
+NSApp.activate(ignoringOtherApps: true)
 
 NSAnimationContext.runAnimationGroup { ctx in
     ctx.duration = 0.15
@@ -82,20 +83,6 @@ func cancel() {
 DispatchQueue.main.asyncAfter(deadline: .now() + 8) { cancel() }
 
 // Key monitor
-NSEvent.addGlobalMonitorForEvents(matching: .keyDown) { event in
-    switch event.keyCode {
-    case 16: // y
-        confirm()
-    case 45: // n
-        cancel()
-    case 53: // escape
-        cancel()
-    case 36, 76: // enter/return — confirm
-        confirm()
-    default: break
-    }
-}
-
 NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
     switch event.keyCode {
     case 16: confirm()
@@ -104,7 +91,7 @@ NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
     case 36, 76: confirm()
     default: break
     }
-    return event
+    return nil // suppress all keypresses while dialog is open
 }
 
 app.run()
