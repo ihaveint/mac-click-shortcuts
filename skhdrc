@@ -2,3 +2,5 @@ cmd + shift - d : /opt/homebrew/bin/cleanclick
 cmd + shift - e : /opt/homebrew/bin/cleanclick right
 cmd + shift - s : touch /tmp/cleanclick_dragdown
 cmd + shift - a : touch /tmp/cleanclick_dragup
+cmd + shift - c : /opt/homebrew/bin/bash /Users/ihaveint/Documents/github/mac-click-shortcuts/clipush.sh
+cmd + alt - v : /opt/homebrew/bin/bash /Users/ihaveint/Documents/github/mac-click-shortcuts/clipop.sh

@@ -8,23 +8,37 @@ let pos = NSEvent.mouseLocation
 let screenHeight = NSScreen.main?.frame.height ?? 0
 let cgPos = CGPoint(x: pos.x, y: screenHeight - pos.y)
 
-func postEvent(_ type: CGEventType, _ button: CGMouseButton) {
+func postMouse(_ type: CGEventType, _ button: CGMouseButton) {
     let event = CGEvent(mouseEventSource: nil, mouseType: type, mouseCursorPosition: cgPos, mouseButton: button)!
     event.flags = []
     event.post(tap: .cghidEventTap)
 }
 
+func postKeystroke(keycode: CGKeyCode, flags: CGEventFlags = []) {
+    let src = CGEventSource(stateID: .hidSystemState)
+    let down = CGEvent(keyboardEventSource: src, virtualKey: keycode, keyDown: true)!
+    let up   = CGEvent(keyboardEventSource: src, virtualKey: keycode, keyDown: false)!
+    down.flags = flags
+    up.flags   = flags
+    down.post(tap: .cghidEventTap)
+    Thread.sleep(forTimeInterval: 0.01)
+    up.post(tap: .cghidEventTap)
+}
+
 switch mode {
 case "right":
-    postEvent(.rightMouseDown, .right)
+    postMouse(.rightMouseDown, .right)
     Thread.sleep(forTimeInterval: 0.01)
-    postEvent(.rightMouseUp, .right)
+    postMouse(.rightMouseUp, .right)
 case "dragdown":
-    postEvent(.leftMouseDown, .left)
+    postMouse(.leftMouseDown, .left)
 case "dragup":
-    postEvent(.leftMouseUp, .left)
+    postMouse(.leftMouseUp, .left)
+case "paste":
+    // cmd+v  (keycode 9 = v)
+    postKeystroke(keycode: 9, flags: .maskCommand)
 default: // "left"
-    postEvent(.leftMouseDown, .left)
+    postMouse(.leftMouseDown, .left)
     Thread.sleep(forTimeInterval: 0.01)
-    postEvent(.leftMouseUp, .left)
+    postMouse(.leftMouseUp, .left)
 }
