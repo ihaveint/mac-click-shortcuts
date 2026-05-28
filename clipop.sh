@@ -5,4 +5,6 @@ if [ ! -s "$STACK" ]; then
 fi
 tail -1 "$STACK" | base64 --decode | pbcopy
 sed -i '' '$d' "$STACK"
+count=$(wc -l < "$STACK" | tr -d ' ')
+/opt/homebrew/bin/clipnotify pop "$count" &
 /opt/homebrew/bin/cleanclick paste

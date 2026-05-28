@@ -1,3 +1,5 @@
 #!/bin/bash
-# Push current clipboard onto stack
-pbpaste | base64 >> ~/.clipboard_stack
+STACK=~/.clipboard_stack
+pbpaste | base64 >> "$STACK"
+count=$(wc -l < "$STACK" | tr -d ' ')
+/opt/homebrew/bin/clipnotify push "$count" &
