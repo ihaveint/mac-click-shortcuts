@@ -39,19 +39,36 @@ Then grant Accessibility permission (script will tell you exactly where).
 
 macOS requires Accessibility access for global hotkey interception, synthetic mouse events, and event tap. One-time setup for each binary:
 
-1. System Settings → Privacy & Security → Accessibility
-2. Add each of these (use `+` → Cmd+Shift+G to paste path):
-   - `/opt/homebrew/Cellar/skhd/<version>/bin/skhd`
-   - `/opt/homebrew/bin/dragdaemon`
-3. Toggle both ON
-4. Run:
+1. **Stop the daemon first** (prevents crash-loop interfering with permission grant):
+```bash
+launchctl unload ~/Library/LaunchAgents/com.cleanclick.dragdaemon.plist
+```
+
+2. System Settings → Privacy & Security → Accessibility
+3. Remove any existing `dragdaemon` or `dragdaemon_bin` entries
+4. Click `+`, navigate to `/opt/homebrew/bin/dragdaemon_bin`, Open, toggle **ON**
+5. Also add `/opt/homebrew/Cellar/skhd/<version>/bin/skhd` if not present
+6. Restart everything:
 ```bash
 skhd --stop-service && skhd --start-service
-launchctl unload ~/Library/LaunchAgents/com.cleanclick.dragdaemon.plist
 launchctl load ~/Library/LaunchAgents/com.cleanclick.dragdaemon.plist
 ```
 
-> **Note:** if you recompile any binary, its hash changes and Accessibility permission resets — re-grant and restart.
+### Surviving recompiles (codesigning)
+
+The LaunchAgent runs `dragdaemon_bin` directly. When signed with a stable Apple Developer certificate, TCC tracks by team identity instead of binary hash — permission survives recompiles.
+
+Sign after install or recompile:
+```bash
+codesign --force --sign "Apple Development: <your-apple-id> (<team-id>)" /opt/homebrew/bin/dragdaemon_bin
+```
+
+To find your signing identity:
+```bash
+security find-identity -v -p codesigning
+```
+
+After signing, re-grant Accessibility once (steps above). Subsequent recompiles only need the `codesign` command — no re-granting.
 
 ## Clipboard stack
 
