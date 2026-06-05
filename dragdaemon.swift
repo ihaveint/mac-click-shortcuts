@@ -64,8 +64,13 @@ let src = CFMachPortCreateRunLoopSource(kCFAllocatorDefault, tap, 0)
 CFRunLoopAddSource(CFRunLoopGetCurrent(), src, .commonModes)
 CGEvent.tapEnable(tap: tap, enable: true)
 
-// Poll trigger files every 30ms
+// Poll trigger files every 30ms; also watchdog the event tap
 Timer.scheduledTimer(withTimeInterval: 0.03, repeats: true) { _ in
+    // If macOS disabled our tap (e.g. permission revoked), exit so launchd restarts us
+    if !CGEvent.tapIsEnabled(tap: tap) {
+        fputs("dragdaemon: event tap disabled — exiting for restart\n", stderr)
+        exit(2)
+    }
     if fm.fileExists(atPath: downFile) {
         try? fm.removeItem(atPath: downFile)
         guard !isDragging else { return }
